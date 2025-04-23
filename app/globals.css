@@ -109,4 +109,22 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Add padding to the top of the page */
+  body {
+    padding-top: 0 !important;
+  }
+
+  /* Ensure content isn't cut off */
+  .chat-container {
+    padding-top: 24px !important;
+  }
+
+  /* Style the floating controls */
+  .fixed.top-4 {
+    background-color: var(--background);
+    padding: 4px;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
 }

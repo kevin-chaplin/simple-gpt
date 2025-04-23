@@ -1,13 +1,14 @@
 import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
 import { logDebug, logError } from "@/lib/debug"
+import { auth } from "@clerk/nextjs/server"
 
 // System prompt to ensure simple, non-technical responses with good formatting
 const SYSTEM_PROMPT = `
 You are Simple GPT, a friendly AI assistant designed to help people with everyday questions.
 
 IMPORTANT INSTRUCTIONS:
-- Always explain things in very simple terms, as if you're talking to a 5-year-old
+- Always explain things in very simple terms, as if you're talking to a 5-year-old or an adult with no technical background
 - Avoid all technical jargon and complex terminology
 - Use short sentences and simple words
 - Use everyday examples and analogies that anyone can understand
@@ -33,6 +34,18 @@ export async function POST(req: Request) {
   try {
     // Log that we received a request
     logDebug("API", "Chat API route called")
+
+    // Check if the user is authenticated
+    const session = await auth()
+
+    // For authenticated users, proceed normally
+    if (session.userId) {
+      logDebug("API", `Authenticated request from user: ${session.userId}`)
+    } else {
+      // For anonymous users, we'll allow the request to proceed
+      // The client-side code will handle limiting the number of requests
+      logDebug("API", "Anonymous request - client will handle usage limits")
+    }
 
     const body = await req.json()
     const { messages } = body

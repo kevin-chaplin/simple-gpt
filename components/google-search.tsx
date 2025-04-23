@@ -8,7 +8,8 @@ import { useToast } from "@/components/ui/use-toast"
 
 interface GoogleSearchProps {
   onSearch: (query: string) => void
-  isLoading: boolean
+  isLoading?: boolean
+  error?: string | null
 }
 
 export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
@@ -19,10 +20,14 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
     e.preventDefault()
     if (query.trim() && !isLoading) {
       try {
-        // Log that we're attempting to search
-        console.log("Submitting search query:", query)
-        onSearch(query)
-        // Don't clear the query until we get a successful response
+        // Submit the search query
+
+        // Disable the form temporarily to prevent double submissions
+        const currentQuery = query
+        setQuery("") // Clear the input immediately
+
+        // Call the onSearch function with the query
+        onSearch(currentQuery)
       } catch (error) {
         console.error("Error in GoogleSearch handleSubmit:", error)
         toast({
@@ -35,7 +40,7 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto px-4">
+    <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto px-4 py-8 h-full">
       <div className="text-4xl md:text-5xl font-bold mb-4 text-center">
         <span className="text-primary">Simple GPT</span>
       </div>

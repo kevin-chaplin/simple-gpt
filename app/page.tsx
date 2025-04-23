@@ -1,30 +1,53 @@
+"use client"
+
 import Link from "next/link"
+import { useAuth } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, Brain, MessageSquare } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+// Header removed in favor of floating controls
+import { ChatInterface, ChatInterfaceRef } from "@/components/chat-interface"
+import { useEffect, useState, useRef, useCallback } from "react"
+import { hasExceededAnonymousLimit } from "@/lib/anonymous-usage"
 
 export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const [hasUsedFreeRequest, setHasUsedFreeRequest] = useState(false)
+  const chatInterfaceRef = useRef<ChatInterfaceRef>(null)
+
+  // Force a re-render when the component mounts to ensure auth state is current
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Check if the user has used their free request
+  useEffect(() => {
+    if (typeof window !== 'undefined' && mounted && !isSignedIn) {
+      setHasUsedFreeRequest(hasExceededAnonymousLimit())
+    }
+  }, [mounted, isSignedIn])
+
+  // State to manually show the chat interface for anonymous users
+  const [showTryItView, setShowTryItView] = useState(false)
+
+  // Logo click functionality moved to the chat interface
+  // This is now handled by the New Chat button in the sidebar and floating controls
+
+  // Handle try it now button click
+  const handleTryItNow = useCallback(() => {
+    setShowTryItView(true)
+  }, [])
+
+  // Only render the authenticated view once the component has mounted and auth is loaded
+  const showAuthenticatedView = isLoaded && mounted && (isSignedIn || showTryItView)
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center font-bold text-xl text-primary">
-            Simple GPT
-          </Link>
-          <div className="flex items-center gap-4">
-            <nav className="flex gap-4 sm:gap-6">
-              <Link href="/dashboard" className="text-sm font-medium hover:underline underline-offset-4">
-                Dashboard
-              </Link>
-              <Link href="/pricing" className="text-sm font-medium hover:underline underline-offset-4">
-                Pricing
-              </Link>
-            </nav>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+    <div className="flex flex-col h-screen">
       <main className="flex-1">
+        {showAuthenticatedView ? (
+          <ChatInterface ref={chatInterfaceRef} />
+        ) : (
+          <>
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
@@ -40,12 +63,32 @@ export default function Home() {
                   Get answers in simple, easy-to-understand language. No technical jargon, just clear explanations.
                 </p>
               </div>
-              <div className="pt-4">
-                <Link href="/dashboard">
-                  <Button className="px-8">
-                    Get Started <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+              <div className="pt-4 flex gap-4">
+                {hasUsedFreeRequest ? (
+                  <>
+                    <Link href="/sign-up">
+                      <Button className="px-8">
+                        Sign Up Free <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link href="/sign-in">
+                      <Button variant="outline" className="px-8">
+                        Sign In
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={handleTryItNow} className="px-8">
+                      Try It Now <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Link href="/sign-up">
+                      <Button variant="outline" className="px-8">
+                        Sign Up Free
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -97,28 +140,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+          </>
+        )}
       </main>
-      <footer className="border-t">
-        <div className="container mx-auto px-4 md:px-6 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-muted-foreground">© 2023 Simple GPT. All rights reserved.</p>
-            <nav className="flex gap-4 sm:gap-6">
-              <Link
-                href="#"
-                className="text-xs text-muted-foreground hover:text-primary hover:underline underline-offset-4"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                href="#"
-                className="text-xs text-muted-foreground hover:text-primary hover:underline underline-offset-4"
-              >
-                Privacy
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

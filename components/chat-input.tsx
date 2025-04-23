@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { SendIcon, Paperclip, Mic } from "lucide-react"
+import { SendIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
@@ -11,6 +11,7 @@ interface ChatInputProps {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   isLoading: boolean
+  showGoogleSearch?: boolean
 }
 
 export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }: ChatInputProps) {
@@ -52,16 +53,6 @@ export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }:
   return (
     <form onSubmit={onSubmit} className="py-4 w-full max-w-4xl mx-auto">
       <div className="flex items-end gap-2 bg-background border rounded-lg p-2 shadow-sm">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          disabled={isLoading}
-        >
-          <Paperclip className="h-4 w-4" />
-          <span className="sr-only">Attach file</span>
-        </Button>
         <Textarea
           value={input}
           onChange={handleInputChange}
@@ -70,16 +61,6 @@ export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }:
           className="min-h-[40px] border-0 focus-visible:ring-0 resize-none flex-1 py-2 px-2"
           disabled={isLoading}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          disabled={isLoading}
-        >
-          <Mic className="h-4 w-4" />
-          <span className="sr-only">Voice input</span>
-        </Button>
         <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="h-8 w-8">
           <SendIcon className="h-4 w-4" />
           <span className="sr-only">Send message</span>

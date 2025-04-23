@@ -125,27 +125,6 @@ export default function PricingPage() {
           </div>
         </section>
       </main>
-      <footer className="border-t">
-        <div className="container mx-auto px-4 md:px-6 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-muted-foreground">© 2023 Simple GPT. All rights reserved.</p>
-            <nav className="flex gap-4 sm:gap-6">
-              <Link
-                href="#"
-                className="text-xs text-muted-foreground hover:text-primary hover:underline underline-offset-4"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                href="#"
-                className="text-xs text-muted-foreground hover:text-primary hover:underline underline-offset-4"
-              >
-                Privacy
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

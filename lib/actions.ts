@@ -11,7 +11,7 @@ export async function createConversation() {
     throw new Error("Unauthorized")
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from("conversations")
@@ -39,7 +39,7 @@ export async function updateConversationTitle(id: string, title: string) {
     throw new Error("Unauthorized")
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // Verify the conversation belongs to the user
   const { data: conversation, error: conversationError } = await supabase
@@ -72,7 +72,7 @@ export async function deleteConversation(id: string) {
     throw new Error("Unauthorized")
   }
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   // Verify the conversation belongs to the user
   const { data: conversation, error: conversationError } = await supabase
