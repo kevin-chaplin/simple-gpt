@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@clerk/nextjs"
-import { Check } from "lucide-react"
+import { Check, ArrowLeft, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { toast } from "@/components/ui/use-toast"
+import { UserProfile } from "@/components/user-profile"
 
 // Define the pricing plans with Stripe IDs
 const plans = [
@@ -115,25 +116,41 @@ export default function PricingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
-        <div className="container mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center font-bold text-xl text-primary">
-            Sensible GPT
-          </Link>
-          <div className="flex items-center gap-4">
-            <nav className="flex gap-4 sm:gap-6">
-              <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
-                Home
-              </Link>
-              <Link href="/pricing" className="text-sm font-medium hover:underline underline-offset-4">
-                Pricing
-              </Link>
-            </nav>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-      <main className="flex-1">
+      {/* Floating controls in top-right corner */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2" style={{ border: 'none', boxShadow: 'none' }}>
+        {/* Theme toggle */}
+        <ThemeToggle />
+
+        {/* User account controls */}
+        {isSignedIn ? (
+          <UserProfile />
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm border-0"
+            onClick={() => router.push('/sign-in')}
+          >
+            <User className="h-4 w-4 mr-1" />
+            <span className="sr-only sm:not-sr-only">Sign In</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Back button - floating in top-left */}
+      <div className="fixed top-4 left-4 z-50">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm border-0"
+          onClick={() => router.push('/')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          <span className="sr-only sm:not-sr-only">Back</span>
+        </Button>
+      </div>
+
+      <main className="flex-1 pt-16">
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mx-auto max-w-3xl text-center">
