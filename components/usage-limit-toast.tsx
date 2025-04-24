@@ -11,11 +11,12 @@ export function UsageLimitToast() {
   const { toast } = useToast()
   const router = useRouter()
   const [hasShownToast, setHasShownToast] = useState(false)
-  const [checkInterval, setCheckInterval] = useState<NodeJS.Timeout | null>(null)
 
   // Function to show the toast
   const showLimitToast = () => {
     console.log("UsageLimitToast: Showing limit reached toast")
+
+    // Use a direct toast call instead of the hook
     toast({
       title: "Daily limit reached",
       description: (
@@ -32,7 +33,6 @@ export function UsageLimitToast() {
         </div>
       ),
       variant: "destructive",
-      duration: 10000, // Show for 10 seconds
     })
 
     setHasShownToast(true)
@@ -40,42 +40,26 @@ export function UsageLimitToast() {
 
   // Check usage when the component mounts
   useEffect(() => {
-    console.log("UsageLimitToast: Component mounted")
-
-    // Force a check of usage limits when the component mounts
+    // Only check once on mount, no periodic checks
     const checkCurrentUsage = async () => {
-      console.log("UsageLimitToast: Checking current usage")
-      const data = await checkUsage()
-      console.log("UsageLimitToast: Usage check result:", data)
+      try {
+        const data = await checkUsage()
 
-      // Show toast immediately if limit is reached
-      if (hasReachedLimit && !hasShownToast) {
-        showLimitToast()
+        // Show toast immediately if limit is reached
+        if (data && data.hasReachedLimit && !hasShownToast) {
+          showLimitToast()
+        }
+      } catch (error) {
+        console.error("Error checking usage:", error)
       }
     }
 
-    // Check immediately on mount
     checkCurrentUsage()
-
-    // Set up periodic checks (every 5 seconds)
-    const interval = setInterval(() => {
-      checkCurrentUsage()
-    }, 5000)
-
-    setCheckInterval(interval)
-
-    return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty dependency array to run only on mount
 
   // Show toast when limit is reached
   useEffect(() => {
-    console.log("UsageLimitToast: hasReachedLimit changed:", hasReachedLimit)
-
     if (hasReachedLimit && !hasShownToast) {
       showLimitToast()
     }

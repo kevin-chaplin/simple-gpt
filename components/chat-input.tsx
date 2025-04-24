@@ -55,12 +55,17 @@ export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }:
     }
   }
 
-  // Check usage when component renders
+  // Check usage only once when component renders
   React.useEffect(() => {
     const checkCurrentUsage = async () => {
-      await checkUsage()
+      try {
+        await checkUsage()
+      } catch (error) {
+        console.error("ChatInput: Error checking usage:", error)
+      }
     }
 
+    // Check immediately on mount
     checkCurrentUsage()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -68,20 +73,21 @@ export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }:
   return (
     <form onSubmit={onSubmit} className="py-4 w-full max-w-4xl mx-auto">
       {hasReachedLimit && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex flex-col">
-            <p>You've reached your daily limit of {messageLimit} messages. Your limit will reset in {timeUntilReset}.</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2 self-start"
-              onClick={() => router.push("/pricing")}
-            >
-              Upgrade Plan
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <div className="mb-4 p-4 border-2 border-destructive bg-destructive/10 rounded-lg text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <h3 className="font-bold text-destructive">Daily Limit Reached</h3>
+          </div>
+          <p className="mb-3">You've reached your daily limit of <strong>{messageLimit} messages</strong>. Your limit will reset in <strong>{timeUntilReset}</strong>.</p>
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-destructive hover:bg-destructive/90"
+            onClick={() => router.push("/pricing")}
+          >
+            Upgrade Your Plan
+          </Button>
+        </div>
       )}
 
       <div className="flex items-end gap-2 bg-background border rounded-lg p-2 shadow-sm">

@@ -148,12 +148,17 @@ export async function hasReachedDailyLimit(): Promise<boolean> {
     const subscription = await getUserSubscription()
 
     if (!subscription) {
+      logError("Usage", "No subscription found for user, defaulting to free plan")
       return false // Error fetching subscription, allow the request
     }
+
+    logDebug("Usage", `Checking limits for user ${userId} with plan ${subscription.plan}`)
+    logDebug("Usage", `Subscription details: daily_message_limit=${subscription.daily_message_limit}, history_days=${subscription.history_days}`)
 
     // If the user has an unlimited plan, they haven't reached their limit
     if (subscription.daily_message_limit === Infinity ||
         subscription.daily_message_limit < 0) {
+      logDebug("Usage", `User ${userId} has unlimited messages (${subscription.daily_message_limit})`)
       return false
     }
 
@@ -161,11 +166,20 @@ export async function hasReachedDailyLimit(): Promise<boolean> {
     const usage = await getUserDailyUsage()
 
     if (!usage) {
+      logError("Usage", "No usage record found for today")
       return false // Error fetching usage, allow the request
     }
 
+    logDebug("Usage", `User ${userId} has used ${usage.message_count} of ${subscription.daily_message_limit} messages today`)
+
     // Check if the user has reached their limit
-    return usage.message_count >= subscription.daily_message_limit
+    const hasReached = usage.message_count >= subscription.daily_message_limit
+
+    if (hasReached) {
+      logDebug("Usage", `User ${userId} has reached their daily limit of ${subscription.daily_message_limit} messages`)
+    }
+
+    return hasReached
   } catch (error) {
     logError("Usage", `Error in hasReachedDailyLimit: ${error}`)
     return false // Error checking limit, allow the request
@@ -327,11 +341,22 @@ export async function pruneOldConversations(): Promise<void> {
 export async function updateSubscriptionLimits(userId: string, plan: string): Promise<void> {
   try {
     if (!userId || !plan) {
+      logError("Usage", `Invalid parameters for updateSubscriptionLimits: userId=${userId}, plan=${plan}`)
       return
     }
 
     // Get the plan limits
     const planLimits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free
+
+    // Log the plan limits for debugging
+    logDebug("Usage", `Updating subscription limits for user ${userId} to plan ${plan}`)
+    logDebug("Usage", `Plan limits: ${JSON.stringify(planLimits)}`)
+
+    // Calculate the actual values to store in the database
+    const dailyMessageLimit = planLimits.dailyMessageLimit === Infinity ? -1 : planLimits.dailyMessageLimit
+    const historyDays = planLimits.historyDays === Infinity ? -1 : planLimits.historyDays
+
+    logDebug("Usage", `Setting daily_message_limit=${dailyMessageLimit}, history_days=${historyDays}`)
 
     // Use service role client to bypass RLS
     const supabase = createServiceRoleSupabaseClient()
@@ -340,13 +365,15 @@ export async function updateSubscriptionLimits(userId: string, plan: string): Pr
     const { error } = await supabase
       .from("subscriptions")
       .update({
-        daily_message_limit: planLimits.dailyMessageLimit === Infinity ? -1 : planLimits.dailyMessageLimit,
-        history_days: planLimits.historyDays === Infinity ? -1 : planLimits.historyDays
+        daily_message_limit: dailyMessageLimit,
+        history_days: historyDays
       })
       .eq("user_id", userId)
 
     if (error) {
       logError("Usage", `Error updating subscription limits: ${error.message}`)
+    } else {
+      logDebug("Usage", `Successfully updated subscription limits for user ${userId}`)
     }
   } catch (error) {
     logError("Usage", `Error in updateSubscriptionLimits: ${error}`)

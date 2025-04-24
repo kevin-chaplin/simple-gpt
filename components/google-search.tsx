@@ -2,9 +2,11 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Search, Sparkles } from "lucide-react"
+import { Search, Sparkles, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import { useUsageLimits } from "@/hooks/use-usage-limits"
+import { useRouter } from "next/navigation"
 
 interface GoogleSearchProps {
   onSearch: (query: string) => void
@@ -15,6 +17,8 @@ interface GoogleSearchProps {
 export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
   const [query, setQuery] = useState("")
   const { toast } = useToast()
+  const { hasReachedLimit, messageLimit, timeUntilReset, checkUsage } = useUsageLimits()
+  const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,6 +59,25 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
         </p>
       </div>
 
+      {/* Usage limit message */}
+      {hasReachedLimit && (
+        <div className="mb-6 p-4 border-2 border-destructive bg-destructive/10 rounded-lg text-center w-full max-w-md">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <h3 className="font-bold text-destructive">Daily Limit Reached</h3>
+          </div>
+          <p className="mb-3">You've reached your daily limit of <strong>{messageLimit} messages</strong>. Your limit will reset in <strong>{timeUntilReset}</strong>.</p>
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-destructive hover:bg-destructive/90"
+            onClick={() => router.push("/pricing")}
+          >
+            Upgrade Your Plan
+          </Button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="w-full">
         <div className="relative w-full">
           <div className="flex items-center border rounded-full overflow-hidden shadow-sm hover:shadow-md focus-within:shadow-md">
@@ -65,13 +88,13 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask me anything..."
+              placeholder={hasReachedLimit ? "Daily limit reached. Upgrade to continue." : "Ask me anything..."}
               className="w-full py-3 px-4 outline-none bg-transparent"
-              disabled={isLoading}
+              disabled={isLoading || hasReachedLimit}
             />
           </div>
           <div className="flex justify-center mt-6 space-x-3">
-            <Button type="submit" disabled={isLoading || !query.trim()}>
+            <Button type="submit" disabled={isLoading || !query.trim() || hasReachedLimit}>
               {isLoading ? "Thinking..." : "Search"}
             </Button>
             <Button type="button" variant="outline" disabled={isLoading} onClick={() => setQuery("")}>

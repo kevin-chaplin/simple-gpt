@@ -17,7 +17,7 @@ import { UserProfile } from "@/components/user-profile"
 import { User } from "lucide-react"
 import { useChatHistory } from "@/lib/use-chat-history"
 import { useUsageLimits } from "@/hooks/use-usage-limits"
-import { UsageLimitToast } from "@/components/usage-limit-toast"
+// UsageLimitToast removed in favor of permanent messages
 import {
   hasExceededAnonymousLimit,
   incrementAnonymousRequestCount
@@ -49,34 +49,11 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
   // Usage limits state and functions
   const {
     hasReachedLimit,
-    messageCount,
     messageLimit,
     timeUntilReset,
     incrementUsage,
     checkUsage,
   } = useUsageLimits()
-
-  // Function to show the limit reached toast
-  const showLimitReachedToast = useCallback(() => {
-    toast({
-      title: "Daily limit reached",
-      description: (
-        <div>
-          <p>You've reached your daily limit of {messageLimit} messages. Your limit will reset in {timeUntilReset}.</p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => router.push("/pricing")}
-          >
-            Upgrade Plan
-          </Button>
-        </div>
-      ),
-      variant: "destructive",
-      duration: 10000, // Show for 10 seconds
-    })
-  }, [messageLimit, timeUntilReset, toast, router])
 
   // Chat history state and functions
   const {
@@ -106,18 +83,6 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 
   console.log("Setting up useChat with currentConversationId:", currentConversationId)
   const { messages, input, handleInputChange, isLoading, error, setMessages, append } = useChat({
-    // Only force the interface to chat mode when appropriate
-    onMessagesChange: () => {
-      // Only switch to chat interface if we have messages AND we're not in a new conversation flow
-      // This prevents the UI from switching to chat mode when we want to show the search interface
-      if (messages.length > 0 && currentConversationId) {
-        console.log('Messages changed, checking if we should force chat interface')
-        // Don't force chat interface if we're in search mode and this is a new conversation
-        if (!(interfaceState === 'search' && !currentConversationId)) {
-          setInterfaceState('chat')
-        }
-      }
-    },
     api: "/api/chat",
     id: currentConversationId || undefined,
     initialMessages: [],
@@ -597,12 +562,9 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         // Always check usage first to ensure we have the latest data
         await checkUsage()
 
-        console.log("Usage check result:", { hasReachedLimit, messageCount, messageLimit, timeUntilReset })
-
         // Check again after refreshing the data
         if (hasReachedLimit) {
-          console.log("Showing limit reached toast")
-          showLimitReachedToast()
+          // Just return without submitting - the UI will show the limit message
           return
         }
       }
@@ -670,7 +632,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         })
       }
     },
-    [append, isLoading, toast, isAuthenticated, input, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, showLimitReachedToast]
+    [append, isLoading, toast, isAuthenticated, input, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, router]
   )
 
   // Handle search queries from the Google-like search interface
@@ -696,12 +658,9 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         // Always check usage first to ensure we have the latest data
         await checkUsage()
 
-        console.log("Search usage check result:", { hasReachedLimit, messageCount, messageLimit, timeUntilReset })
-
         // Check again after refreshing the data
         if (hasReachedLimit) {
-          console.log("Showing limit reached toast for search")
-          showLimitReachedToast()
+          // Just return without submitting - the UI will show the limit message
           return
         }
       }
@@ -759,7 +718,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         })
       }
     },
-    [append, isLoading, toast, isAuthenticated, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, showLimitReachedToast]
+    [append, isLoading, toast, isAuthenticated, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, router]
   )
 
   // We'll handle this in useEffect instead to avoid infinite loops
@@ -802,8 +761,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         </div>
       )}
 
-      {/* Include the usage limit toast component */}
-      {isAuthenticated && <UsageLimitToast />}
+      {/* Usage limit toast component removed in favor of permanent messages */}
 
       {/* Main chat area */}
       <div className="flex-1 relative flex flex-col h-screen">
