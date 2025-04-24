@@ -128,3 +128,22 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 }
+
+@layer utilities {
+  /* Animation delay utilities */
+  .animation-delay-0 {
+    animation-delay: 0ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
+}

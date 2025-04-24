@@ -116,23 +116,17 @@ export default function SupabaseProvider({ children }: Props) {
 
   return (
     <Context.Provider value={{ supabase, isLoaded }}>
-      {!isLoaded ? (
+      {loadingError ? (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-            <p className="text-lg font-medium">Loading...</p>
-            {loadingError && (
-              <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md max-w-md text-center">
-                <p className="font-medium">Error loading application</p>
-                <p className="text-sm mt-1">{loadingError}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-colors"
-                >
-                  Reload Page
-                </button>
-              </div>
-            )}
+          <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-md max-w-md text-center">
+            <p className="font-medium">Error loading application</p>
+            <p className="text-sm mt-1">{loadingError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-colors"
+            >
+              Reload Page
+            </button>
           </div>
         </div>
       ) : (
