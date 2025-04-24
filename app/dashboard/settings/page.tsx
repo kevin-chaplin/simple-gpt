@@ -12,7 +12,6 @@ import { useToast } from "@/components/ui/use-toast"
 
 const settingsFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
-  notifications: z.boolean(),
 })
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>
@@ -32,7 +31,6 @@ export default function SettingsPage() {
     resolver: zodResolver(settingsFormSchema),
     defaultValues: {
       theme: (mounted && (theme as "light" | "dark" | "system")) || "system",
-      notifications: true,
     },
   })
 
@@ -132,21 +130,7 @@ export default function SettingsPage() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="notifications"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Notifications</FormLabel>
-                    <FormDescription>Receive notifications about your conversations and updates.</FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {/* Notifications toggle removed as per user request */}
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save changes"}

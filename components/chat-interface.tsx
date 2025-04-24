@@ -8,14 +8,8 @@ import { ChatInput } from "@/components/chat-input"
 import { GoogleSearch } from "@/components/google-search"
 import { ChatSidebar } from "@/components/chat-sidebar"
 import { Button } from "@/components/ui/button"
-import { PlusIcon, MoreHorizontal, Share, Download, Trash2, PanelLeftIcon, PanelLeftCloseIcon } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { PlusIcon, PanelLeftIcon, PanelLeftCloseIcon } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useToast } from "@/components/ui/use-toast"
 import { SignUpPrompt } from "@/components/sign-up-prompt"
 import { UserProfile } from "@/components/user-profile"
@@ -38,7 +32,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
   const [conversationTitle, setConversationTitle] = useState("New Conversation")
   const [searchError, setSearchError] = useState<string | null>(null)
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // State to control UI display
   const [interfaceState, setInterfaceState] = useState<'search' | 'chat'>('search')
@@ -713,18 +707,6 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         <div className={`border-r ${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden h-screen pt-16`}>
           {sidebarOpen && (
             <div className="flex flex-col h-full">
-              {/* New Chat button at the top of sidebar */}
-              <div className="p-3 border-b">
-                <Button
-                  onClick={createNewConversation}
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  <span>New chat</span>
-                </Button>
-              </div>
-
               {/* Chat sidebar with conversations */}
               <div className="flex-1 overflow-y-auto">
                 <ChatSidebar
@@ -745,7 +727,10 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       {/* Main chat area */}
       <div className="flex-1 relative flex flex-col h-screen">
         {/* Floating controls in top-right corner */}
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2" style={{ border: 'none', boxShadow: 'none' }}>
+          {/* Theme toggle */}
+          <ThemeToggle />
+
           {/* User account controls - only shown when authenticated */}
           {isAuthenticated ? (
             <>
@@ -757,7 +742,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
+              className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm border-0"
               onClick={() => window.location.href = '/sign-in'}
             >
               <User className="h-4 w-4 mr-1" />
@@ -772,58 +757,11 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
                 onClick={createNewConversation}
                 variant="ghost"
                 size="sm"
-                className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
+                className="h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm border-0"
               >
                 <PlusIcon className="h-4 w-4 mr-1" />
                 <span className="sr-only sm:not-sr-only">New Chat</span>
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    navigator.clipboard.writeText(JSON.stringify(messages, null, 2))
-                    toast({
-                      title: "Copied to clipboard",
-                      description: "Your conversation has been copied to the clipboard.",
-                    })
-                  }}>
-                    <Share className="mr-2 h-4 w-4" />
-                    <span>Share</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    const blob = new Blob([JSON.stringify(messages, null, 2)], { type: "application/json" })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = `${conversationTitle.replace(/\s+/g, "_")}.json`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    URL.revokeObjectURL(url)
-                    toast({
-                      title: "Downloaded",
-                      description: "Your conversation has been downloaded.",
-                    })
-                  }}>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Download</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={clearConversation}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Clear conversation</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </>
           )}
         </div>

@@ -4,14 +4,11 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import {
-  PlusIcon,
   Trash2,
   MessageSquare,
   Edit,
   Check,
-  X,
-  Search,
-  RefreshCw
+  X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -113,53 +110,6 @@ export function ChatSidebar({
     <div className="flex h-full w-full flex-col border-r bg-muted/40">
       <div className="flex items-center p-4">
         <h2 className="text-lg font-semibold">Chat History</h2>
-        <div className="ml-auto flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleUpdateTitles}
-                  disabled={isLoading || isUpdatingTitles}
-                >
-                  <RefreshCw className={`h-4 w-4 ${isUpdatingTitles ? 'animate-spin' : ''}`} />
-                  <span className="sr-only">Fix conversation titles</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Fix conversation titles</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={onNewConversation}
-                  disabled={isLoading}
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  <span className="sr-only">New conversation</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>New conversation</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-      <div className="px-4 pb-2">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
       </div>
       <Separator />
       <ScrollArea className="flex-1 px-2">
@@ -185,15 +135,6 @@ export function ChatSidebar({
               <div className="text-sm text-muted-foreground text-center px-4">
                 <p>No conversations yet</p>
                 <p className="mt-1">Start a new chat to begin</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={onNewConversation}
-                >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  New Conversation
-                </Button>
               </div>
             )}
           </div>
@@ -253,24 +194,6 @@ export function ChatSidebar({
                     >
                       <div className="font-medium">
                         {conversation.title || "Untitled Conversation"}
-                      </div>
-                      {conversation.last_message ? (
-                        <div className="truncate text-xs text-muted-foreground">
-                          {conversation.last_message === conversation.title
-                            ? "AI: " + (conversation.last_message.length > 35
-                                ? conversation.last_message.substring(0, 35) + "..."
-                                : conversation.last_message)
-                            : conversation.last_message.length > 40
-                              ? conversation.last_message.substring(0, 40) + "..."
-                              : conversation.last_message}
-                        </div>
-                      ) : (
-                        <div className="truncate text-xs text-muted-foreground italic">
-                          No messages
-                        </div>
-                      )}
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {format(new Date(conversation.updated_at), "MMM d, yyyy 'at' h:mm a")}
                       </div>
                     </button>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">

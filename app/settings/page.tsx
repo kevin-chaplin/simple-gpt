@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 // Header removed in favor of floating controls
 import { Button } from "@/components/ui/button"
@@ -9,15 +9,21 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@clerk/nextjs"
 import { ArrowLeft } from "lucide-react"
+import { useTheme } from "next-themes"
 
 export default function SettingsPage() {
   const { toast } = useToast()
   const { user } = useUser()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)
-  const [darkMode, setDarkMode] = useState(false)
-  const [simplifiedLanguage, setSimplifiedLanguage] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSaveSettings = () => {
     setIsSaving(true)
@@ -30,6 +36,11 @@ export default function SettingsPage() {
         description: "Your preferences have been updated successfully.",
       })
     }, 1000)
+  }
+
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return null
   }
 
   return (
@@ -55,20 +66,6 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="simplified-language">Simplified Language</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Get explanations in very simple, easy-to-understand terms
-                  </p>
-                </div>
-                <Switch
-                  id="simplified-language"
-                  checked={simplifiedLanguage}
-                  onCheckedChange={setSimplifiedLanguage}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
                   <Label htmlFor="dark-mode">Dark Mode</Label>
                   <p className="text-sm text-muted-foreground">
                     Use dark theme for the application
@@ -76,8 +73,8 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   id="dark-mode"
-                  checked={darkMode}
-                  onCheckedChange={setDarkMode}
+                  checked={mounted && theme === "dark"}
+                  onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
                 />
               </div>
             </div>
