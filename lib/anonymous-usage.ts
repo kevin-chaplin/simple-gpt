@@ -2,7 +2,7 @@
 
 /**
  * Utility functions to track anonymous user requests
- * This allows new users to try Simple GPT with a limited number of requests
+ * This allows new users to try Sensible GPT with a limited number of requests
  * before requiring sign-up
  */
 
@@ -16,7 +16,7 @@ export const ANONYMOUS_REQUEST_LIMIT = 1
 export function hasExceededAnonymousLimit(): boolean {
   // Don't run this check on the server
   if (typeof window === 'undefined') return false
-  
+
   const count = getAnonymousRequestCount()
   return count >= ANONYMOUS_REQUEST_LIMIT
 }
@@ -28,7 +28,7 @@ export function hasExceededAnonymousLimit(): boolean {
 export function getAnonymousRequestCount(): number {
   // Don't run this on the server
   if (typeof window === 'undefined') return 0
-  
+
   try {
     const count = localStorage.getItem('anonymousRequestCount')
     return count ? parseInt(count, 10) : 0
@@ -46,7 +46,7 @@ export function getAnonymousRequestCount(): number {
 export function incrementAnonymousRequestCount(): number {
   // Don't run this on the server
   if (typeof window === 'undefined') return 0
-  
+
   try {
     const currentCount = getAnonymousRequestCount()
     const newCount = currentCount + 1
@@ -64,7 +64,7 @@ export function incrementAnonymousRequestCount(): number {
 export function resetAnonymousRequestCount(): void {
   // Don't run this on the server
   if (typeof window === 'undefined') return
-  
+
   try {
     localStorage.removeItem('anonymousRequestCount')
   } catch (error) {

@@ -42,16 +42,16 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto px-4 py-8 h-full">
       <div className="text-4xl md:text-5xl font-bold mb-4 text-center">
-        <span className="text-primary">Simple GPT</span>
+        <span className="text-primary">Sensible GPT</span>
       </div>
 
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm mb-4">
           <Sparkles className="h-3.5 w-3.5" />
-          <span>Explains everything simply</span>
+          <span>Explains everything sensibly</span>
         </div>
         <p className="text-muted-foreground">
-          Ask me anything and I'll explain it in simple, easy-to-understand terms.
+          Ask me anything and I'll explain it in sensible, easy-to-understand terms.
         </p>
       </div>
 

@@ -1,49 +1,129 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { toast } from "@/components/ui/use-toast"
 
+// Define the pricing plans with Stripe IDs
 const plans = [
   {
+    id: "free",
     name: "Free",
-    description: "Basic access to Simple GPT",
+    description: "Basic access to Sensible GPT",
     price: "$0",
-    features: ["5 conversations per day", "Basic AI responses", "24-hour conversation history"],
+    features: ["5 conversations per day", "Basic AI responses", "7-day conversation history"],
     cta: "Get Started",
-    href: "/dashboard",
   },
   {
+    id: "pro",
     name: "Pro",
     description: "Enhanced features for regular users",
     price: "$9.99",
     features: ["Unlimited conversations", "Priority response time", "30-day conversation history"],
     cta: "Subscribe",
-    href: "/dashboard",
     popular: true,
   },
   {
+    id: "premium",
     name: "Premium",
     description: "Maximum capabilities for power users",
     price: "$19.99",
     features: ["Everything in Pro", "Unlimited conversation history", "Priority support"],
     cta: "Subscribe",
-    href: "/dashboard",
   },
 ]
 
 export default function PricingPage() {
+  const router = useRouter()
+  const { isSignedIn, isLoaded } = useAuth()
+  const [isLoading, setIsLoading] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  // Check for success or canceled parameters from Stripe redirect
+  useEffect(() => {
+    if (searchParams.get("success")) {
+      toast({
+        title: "Subscription successful!",
+        description: "Thank you for subscribing to Sensible GPT.",
+      })
+    }
+
+    if (searchParams.get("canceled")) {
+      toast({
+        title: "Subscription canceled",
+        description: "Your subscription process was canceled.",
+        variant: "destructive",
+      })
+    }
+  }, [searchParams])
+
+  const handleSubscribe = async (planId: string) => {
+    try {
+      // If the plan is free, no need to go through Stripe
+      if (planId === "free") {
+        router.push("/")
+        return
+      }
+
+      // Check if the user is signed in
+      if (!isSignedIn) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to subscribe to a plan",
+          variant: "destructive",
+        })
+        router.push("/sign-in?redirect=/pricing")
+        return
+      }
+
+      setIsLoading(planId)
+
+      // Call the API to create a checkout session
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: planId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session")
+      }
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url
+    } catch (error) {
+      console.error("Error subscribing to plan:", error)
+      toast({
+        title: "Error",
+        description: "Failed to process subscription. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(null)
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b">
         <div className="container mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center font-bold text-xl text-primary">
-            Simple GPT
+            Sensible GPT
           </Link>
           <div className="flex items-center gap-4">
             <nav className="flex gap-4 sm:gap-6">
-              <Link href="/dashboard" className="text-sm font-medium hover:underline underline-offset-4">
-                Dashboard
+              <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
+                Home
               </Link>
               <Link href="/pricing" className="text-sm font-medium hover:underline underline-offset-4">
                 Pricing
@@ -57,14 +137,14 @@ export default function PricingPage() {
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mx-auto max-w-3xl text-center">
-              <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">Simple, Transparent Pricing</h1>
+              <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">Sensible, Transparent Pricing</h1>
               <p className="mt-4 text-muted-foreground md:text-xl">
-                Choose the plan that works best for you. All plans include access to Simple GPT.
+                Choose the plan that works best for you. All plans include access to Sensible GPT.
               </p>
             </div>
             <div className="grid gap-8 mt-16 md:grid-cols-3 max-w-5xl mx-auto">
               {plans.map((plan) => (
-                <Card key={plan.name} className={plan.popular ? "border-primary shadow-lg relative" : "border-border"}>
+                <Card key={plan.id} className={plan.popular ? "border-primary shadow-lg relative" : "border-border"}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-0 right-0 flex justify-center">
                       <div className="bg-primary text-primary-foreground text-sm font-medium py-1 px-3 rounded-full">
@@ -91,8 +171,15 @@ export default function PricingPage() {
                     </ul>
                   </CardContent>
                   <CardFooter>
-                    <Button asChild className="w-full" variant={plan.popular ? "default" : "outline"}>
-                      <Link href={plan.href}>{plan.cta}</Link>
+                    <Button
+                      className="w-full"
+                      variant={plan.popular ? "default" : "outline"}
+                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={isLoading === plan.id}
+                    >
+                      {isLoading === plan.id
+                        ? "Processing..."
+                        : plan.cta}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -111,13 +198,13 @@ export default function PricingPage() {
                 <div>
                   <h3 className="text-lg font-medium">Is there a free trial?</h3>
                   <p className="text-muted-foreground mt-1">
-                    Yes, our Free plan allows you to try the basic features of Simple GPT without any commitment.
+                    Yes, our Free plan allows you to try the basic features of Sensible GPT without any commitment.
                   </p>
                 </div>
                 <div>
                   <h3 className="text-lg font-medium">What payment methods do you accept?</h3>
                   <p className="text-muted-foreground mt-1">
-                    We accept all major credit cards, including Visa, Mastercard, and American Express.
+                    We accept all major credit cards, including Visa, Mastercard, and American Express through our secure Stripe integration.
                   </p>
                 </div>
               </div>

@@ -10,8 +10,8 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Simple GPT - Your Friendly AI Helper",
-  description: "A simple and intuitive AI assistant for everyone",
+  title: "Sensible GPT - Your Friendly AI Helper",
+  description: "A sensible and intuitive AI assistant for everyone",
     generator: 'v0.dev'
 }
 

@@ -53,14 +53,14 @@ export default function Home() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>AI made simple for everyone</span>
+                <span>AI made sensible for everyone</span>
               </div>
               <div className="space-y-2 max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  <span className="text-primary">Simple GPT</span>
+                  <span className="text-primary">Sensible GPT</span>
                 </h1>
                 <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                  Get answers in simple, easy-to-understand language. No technical jargon, just clear explanations.
+                  Get answers in sensible, easy-to-understand language. No technical jargon, just clear explanations.
                 </p>
               </div>
               <div className="pt-4 flex gap-4">

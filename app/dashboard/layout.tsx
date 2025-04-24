@@ -13,7 +13,7 @@ export default function DashboardLayout({
       <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background">
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-primary">
-            Simple GPT
+            Sensible GPT
           </Link>
           <nav className="flex items-center gap-4 md:gap-6">
             <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium">

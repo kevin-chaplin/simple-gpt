@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { createClient } from "@supabase/supabase-js"
+import { logDebug, logError } from "@/lib/debug"
 
 /**
  * Creates a Supabase client for server-side usage with Clerk authentication
@@ -71,4 +72,28 @@ export const createCachedServerSupabaseClient = async () => {
   }
 
   return serverSupabaseClient;
+}
+
+/**
+ * Creates a Supabase client with service role for admin operations
+ * This should only be used in trusted server contexts like webhooks
+ */
+export const createServiceRoleSupabaseClient = () => {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    logError("Supabase", "Missing Supabase service role environment variables");
+    throw new Error("Missing Supabase service role environment variables");
+  }
+
+  logDebug("Supabase", "Creating service role client");
+
+  // Create client with service role key
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 }

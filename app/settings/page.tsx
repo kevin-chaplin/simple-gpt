@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 // Header removed in favor of floating controls
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -10,11 +10,13 @@ import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@clerk/nextjs"
 import { ArrowLeft } from "lucide-react"
 import { useTheme } from "next-themes"
+import { SubscriptionManagement } from "@/components/subscription-management"
 
 export default function SettingsPage() {
   const { toast } = useToast()
   const { user } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)
@@ -24,6 +26,16 @@ export default function SettingsPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Check for success parameter from Stripe redirect
+  useEffect(() => {
+    if (searchParams.get("success")) {
+      toast({
+        title: "Subscription updated",
+        description: "Your subscription has been updated successfully.",
+      })
+    }
+  }, [searchParams, toast])
 
   const handleSaveSettings = () => {
     setIsSaving(true)
@@ -60,6 +72,11 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-6">
+          <div className="bg-card border rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Subscription</h2>
+            <SubscriptionManagement />
+          </div>
+
           <div className="bg-card border rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Preferences</h2>
 

@@ -52,7 +52,7 @@ export function SignUpPrompt({ open = true, onOpenChange, onClose }: SignUpPromp
           </div>
           <DialogTitle className="text-center">Ready for more?</DialogTitle>
           <DialogDescription className="text-center">
-            You've used your free request. Sign up for free to continue using Simple GPT and get more features.
+            You've used your free request. Sign up for free to continue using Sensible GPT and get more features.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:space-x-3 sm:justify-center">

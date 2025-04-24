@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from "react"
 import { useChat } from "ai/react"
 import { useUser, useAuth } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 import { ChatHistory } from "@/components/chat-history"
 import { ChatInput } from "@/components/chat-input"
 import { GoogleSearch } from "@/components/google-search"
@@ -15,6 +16,8 @@ import { SignUpPrompt } from "@/components/sign-up-prompt"
 import { UserProfile } from "@/components/user-profile"
 import { User } from "lucide-react"
 import { useChatHistory } from "@/lib/use-chat-history"
+import { useUsageLimits } from "@/hooks/use-usage-limits"
+import { UsageLimitToast } from "@/components/usage-limit-toast"
 import {
   hasExceededAnonymousLimit,
   incrementAnonymousRequestCount
@@ -39,6 +42,41 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 
   // Check if the user is authenticated on the client side
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Initialize router
+  const router = useRouter()
+
+  // Usage limits state and functions
+  const {
+    hasReachedLimit,
+    messageCount,
+    messageLimit,
+    timeUntilReset,
+    incrementUsage,
+    checkUsage,
+  } = useUsageLimits()
+
+  // Function to show the limit reached toast
+  const showLimitReachedToast = useCallback(() => {
+    toast({
+      title: "Daily limit reached",
+      description: (
+        <div>
+          <p>You've reached your daily limit of {messageLimit} messages. Your limit will reset in {timeUntilReset}.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => router.push("/pricing")}
+          >
+            Upgrade Plan
+          </Button>
+        </div>
+      ),
+      variant: "destructive",
+      duration: 10000, // Show for 10 seconds
+    })
+  }, [messageLimit, timeUntilReset, toast, router])
 
   // Chat history state and functions
   const {
@@ -548,15 +586,35 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       // Store the user's input in localStorage for recovery if needed
       localStorage.setItem('lastUserInput', currentInputValue)
 
-      // If the user is not authenticated, check if they've exceeded the limit
+      // If the user is not authenticated, check if they've exceeded the anonymous limit
       if (!isAuthenticated && hasExceededAnonymousLimit()) {
         setShowSignUpPrompt(true)
         return
       }
 
-      // If not authenticated, increment the request count
+      // If authenticated, check if they've reached their subscription limit
+      if (isAuthenticated) {
+        // Always check usage first to ensure we have the latest data
+        await checkUsage()
+
+        console.log("Usage check result:", { hasReachedLimit, messageCount, messageLimit, timeUntilReset })
+
+        // Check again after refreshing the data
+        if (hasReachedLimit) {
+          console.log("Showing limit reached toast")
+          showLimitReachedToast()
+          return
+        }
+      }
+
+      // If not authenticated, increment the anonymous request count
       if (!isAuthenticated) {
         incrementAnonymousRequestCount()
+      }
+
+      // If authenticated, increment the usage count
+      if (isAuthenticated) {
+        incrementUsage()
       }
 
       // CRITICAL FIX: Use the append method directly instead of handleSubmit
@@ -612,7 +670,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         })
       }
     },
-    [append, isLoading, toast, isAuthenticated, input, currentConversationId, updateConversation]
+    [append, isLoading, toast, isAuthenticated, input, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, showLimitReachedToast]
   )
 
   // Handle search queries from the Google-like search interface
@@ -627,16 +685,36 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       // Store the search query in localStorage for recovery if needed
       localStorage.setItem('lastUserInput', query)
 
-      // If the user is not authenticated, check if they've exceeded the limit
+      // If the user is not authenticated, check if they've exceeded the anonymous limit
       if (!isAuthenticated && hasExceededAnonymousLimit()) {
         setShowSignUpPrompt(true)
         return
       }
 
+      // If authenticated, check if they've reached their subscription limit
+      if (isAuthenticated) {
+        // Always check usage first to ensure we have the latest data
+        await checkUsage()
+
+        console.log("Search usage check result:", { hasReachedLimit, messageCount, messageLimit, timeUntilReset })
+
+        // Check again after refreshing the data
+        if (hasReachedLimit) {
+          console.log("Showing limit reached toast for search")
+          showLimitReachedToast()
+          return
+        }
+      }
+
       try {
-        // If not authenticated, increment the request count
+        // If not authenticated, increment the anonymous request count
         if (!isAuthenticated) {
           incrementAnonymousRequestCount()
+        }
+
+        // If authenticated, increment the usage count
+        if (isAuthenticated) {
+          incrementUsage()
         }
 
         // CRITICAL FIX: First ensure we're showing the chat interface
@@ -681,7 +759,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         })
       }
     },
-    [append, isLoading, toast, isAuthenticated, currentConversationId, updateConversation]
+    [append, isLoading, toast, isAuthenticated, currentConversationId, updateConversation, hasReachedLimit, messageLimit, timeUntilReset, incrementUsage, checkUsage, showLimitReachedToast]
   )
 
   // We'll handle this in useEffect instead to avoid infinite loops
@@ -723,6 +801,9 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
           )}
         </div>
       )}
+
+      {/* Include the usage limit toast component */}
+      {isAuthenticated && <UsageLimitToast />}
 
       {/* Main chat area */}
       <div className="flex-1 relative flex flex-col h-screen">

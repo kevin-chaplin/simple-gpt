@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const plans = [
   {
     name: "Free",
-    description: "Basic access to Simple GPT",
+    description: "Basic access to Sensible GPT",
     price: "$0",
-    features: ["5 conversations per day", "Basic AI responses", "24-hour conversation history"],
+    features: ["5 conversations per day", "Basic AI responses", "7-day conversation history"],
     priceId: "free",
   },
   {
@@ -18,14 +18,14 @@ const plans = [
     description: "Enhanced features for regular users",
     price: "$9.99",
     features: ["Unlimited conversations", "Priority response time", "30-day conversation history"],
-    priceId: "pro_monthly",
+    priceId: "pro",
   },
   {
     name: "Premium",
     description: "Maximum capabilities for power users",
     price: "$19.99",
     features: ["Everything in Pro", "Unlimited conversation history", "Priority support"],
-    priceId: "premium_monthly",
+    priceId: "premium",
   },
 ]
 

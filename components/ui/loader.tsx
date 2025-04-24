@@ -37,7 +37,7 @@ export function Loader() {
     return (
       <div className="flex flex-col items-center justify-center space-y-4">
         <div className="h-16 w-16 animate-pulse rounded-full border-4 border-primary/20 border-t-primary"></div>
-        <div className="text-xl font-semibold text-primary">Simple GPT</div>
+        <div className="text-xl font-semibold text-primary">Sensible GPT</div>
       </div>
     )
   }
@@ -59,7 +59,7 @@ export function Loader() {
 
         {/* Text logo with fade-in animation */}
         <div className="z-10 mt-32 animate-fade-in text-2xl font-bold text-primary">
-          Simple GPT
+          Sensible GPT
         </div>
       </div>
 
