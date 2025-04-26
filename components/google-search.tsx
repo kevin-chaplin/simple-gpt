@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation"
 interface GoogleSearchProps {
   onSearch: (query: string) => void
   isLoading?: boolean
-  error?: string | null
+  error: string | null
 }
 
-export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
+export function GoogleSearch({ onSearch, isLoading, error }: GoogleSearchProps) {
   const [query, setQuery] = useState("")
   const { toast } = useToast()
   const { hasReachedLimit, messageLimit, timeUntilReset, checkUsage } = useUsageLimits()
@@ -45,16 +45,16 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
 
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto px-4 py-8 h-full">
-      <div className="text-4xl md:text-5xl font-bold mb-4 text-center">
+      <div className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-center">
         <span className="text-primary">Sensible GPT</span>
       </div>
 
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm mb-4">
+      <div className="mb-6 sm:mb-8 text-center">
+        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm mb-3 sm:mb-4">
           <Sparkles className="h-3.5 w-3.5" />
           <span>Explains everything sensibly</span>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Ask me anything and I'll explain it in sensible, easy-to-understand terms.
         </p>
       </div>
@@ -81,31 +81,51 @@ export function GoogleSearch({ onSearch, isLoading }: GoogleSearchProps) {
       <form onSubmit={handleSubmit} className="w-full">
         <div className="relative w-full">
           <div className="flex items-center border rounded-full overflow-hidden shadow-sm hover:shadow-md focus-within:shadow-md">
-            <div className="pl-4">
-              <Search className="h-5 w-5 text-gray-400" />
+            <div className="pl-3 sm:pl-4">
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={hasReachedLimit ? "Daily limit reached. Upgrade to continue." : "Ask me anything..."}
-              className="w-full py-3 px-4 outline-none bg-transparent"
+              placeholder={hasReachedLimit ? "Daily limit reached." : "Ask me anything..."}
+              className="w-full py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base outline-none bg-transparent"
               disabled={isLoading || hasReachedLimit}
             />
           </div>
-          <div className="flex justify-center mt-6 space-x-3">
-            <Button type="submit" disabled={isLoading || !query.trim() || hasReachedLimit}>
+          <div className="flex justify-center mt-4 sm:mt-6 space-x-2 sm:space-x-3">
+            <Button
+              type="submit"
+              disabled={isLoading || !query.trim() || hasReachedLimit}
+              size="sm"
+              className="text-xs sm:text-sm py-1 px-3 sm:py-2 sm:px-4 h-auto"
+            >
               {isLoading ? "Thinking..." : "Search"}
             </Button>
-            <Button type="button" variant="outline" disabled={isLoading} onClick={() => setQuery("")}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isLoading}
+              onClick={() => setQuery("")}
+              size="sm"
+              className="text-xs sm:text-sm py-1 px-3 sm:py-2 sm:px-4 h-auto"
+            >
               Clear
             </Button>
           </div>
         </div>
       </form>
 
-      <div className="mt-8 text-center max-w-md">
-        <p className="text-sm text-muted-foreground">
+      {/* Error message */}
+      {error && (
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 border border-destructive bg-destructive/10 rounded-lg text-center w-full max-w-md">
+          <p className="text-destructive font-medium text-sm sm:text-base">Error: {error}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">Please try again or try a different query.</p>
+        </div>
+      )}
+
+      <div className="mt-4 sm:mt-8 text-center max-w-md">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Try asking: "How does the internet work?" or "Why is the sky blue?" or "What is climate change?"
         </p>
       </div>

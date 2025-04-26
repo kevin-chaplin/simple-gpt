@@ -870,9 +870,9 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         )}
 
         {/* Main content area */}
-        <div className="flex-1 overflow-y-auto pt-16">
+        <div className="flex-1 overflow-y-auto pt-16 w-full">
           {showGoogleSearch ? (
-            <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
+            <div className="flex items-center justify-center min-h-[calc(100vh-160px)] w-full">
               <GoogleSearch onSearch={handleSearch} error={searchError || null} />
             </div>
           ) : (
