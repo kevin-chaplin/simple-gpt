@@ -35,6 +35,27 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
   const [conversationTitle, setConversationTitle] = useState("New Conversation")
   const [searchError, setSearchError] = useState<string | null>(null)
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false)
+
+  // Add effect to log when showSignUpPrompt changes
+  useEffect(() => {
+    console.log('showSignUpPrompt changed:', showSignUpPrompt)
+  }, [showSignUpPrompt])
+
+  // Add effect to check anonymous limit on mount
+  useEffect(() => {
+    // Only run this effect after authentication status is determined
+    if (isUserLoaded) {
+      if (!isSignedIn && typeof window !== 'undefined') {
+        const hasExceeded = hasExceededAnonymousLimit()
+        console.log('Initial check for anonymous limit exceeded:', hasExceeded)
+
+        if (hasExceeded) {
+          console.log('Setting showSignUpPrompt to true on initial load')
+          setShowSignUpPrompt(true)
+        }
+      }
+    }
+  }, [isUserLoaded, isSignedIn])
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // State to control UI display
@@ -552,9 +573,15 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       localStorage.setItem('lastUserInput', currentInputValue)
 
       // If the user is not authenticated, check if they've exceeded the anonymous limit
-      if (!isAuthenticated && hasExceededAnonymousLimit()) {
-        setShowSignUpPrompt(true)
-        return
+      if (isUserLoaded && !isSignedIn) {
+        const hasExceeded = hasExceededAnonymousLimit()
+        console.log('Checking if anonymous user has exceeded limit:', hasExceeded)
+
+        if (hasExceeded) {
+          console.log('Anonymous user has exceeded limit, showing sign-up prompt')
+          setShowSignUpPrompt(true)
+          return
+        }
       }
 
       // If authenticated, check if they've reached their subscription limit
@@ -570,8 +597,14 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       }
 
       // If not authenticated, increment the anonymous request count
-      if (!isAuthenticated) {
-        incrementAnonymousRequestCount()
+      if (isUserLoaded && !isSignedIn) {
+        console.log('User is not authenticated, incrementing anonymous request count')
+        const newCount = incrementAnonymousRequestCount()
+        console.log('New anonymous request count:', newCount)
+
+        // Check if the user has now exceeded the limit
+        const hasExceeded = hasExceededAnonymousLimit()
+        console.log('Has exceeded anonymous limit after increment:', hasExceeded)
       }
 
       // If authenticated, increment the usage count
@@ -648,9 +681,15 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
       localStorage.setItem('lastUserInput', query)
 
       // If the user is not authenticated, check if they've exceeded the anonymous limit
-      if (!isAuthenticated && hasExceededAnonymousLimit()) {
-        setShowSignUpPrompt(true)
-        return
+      if (isUserLoaded && !isSignedIn) {
+        const hasExceeded = hasExceededAnonymousLimit()
+        console.log('Search: Checking if anonymous user has exceeded limit:', hasExceeded)
+
+        if (hasExceeded) {
+          console.log('Search: Anonymous user has exceeded limit, showing sign-up prompt')
+          setShowSignUpPrompt(true)
+          return
+        }
       }
 
       // If authenticated, check if they've reached their subscription limit
@@ -667,8 +706,14 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 
       try {
         // If not authenticated, increment the anonymous request count
-        if (!isAuthenticated) {
-          incrementAnonymousRequestCount()
+        if (isUserLoaded && !isSignedIn) {
+          console.log('Search: User is not authenticated, incrementing anonymous request count')
+          const newCount = incrementAnonymousRequestCount()
+          console.log('Search: New anonymous request count:', newCount)
+
+          // Check if the user has now exceeded the limit
+          const hasExceeded = hasExceededAnonymousLimit()
+          console.log('Search: Has exceeded anonymous limit after increment:', hasExceeded)
         }
 
         // If authenticated, increment the usage count
@@ -835,20 +880,27 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
           )}
         </div>
 
+        {/* Sign up prompt - always render it when needed, regardless of other UI state */}
+        {showSignUpPrompt && (
+          <SignUpPrompt
+            open={showSignUpPrompt}
+            onClose={() => {
+              console.log('SignUpPrompt onClose called')
+              setShowSignUpPrompt(false)
+            }}
+          />
+        )}
+
         {/* Input section at the bottom - sticky to ensure it stays at the bottom */}
         {!showGoogleSearch && (
           <div className="sticky bottom-0 p-4 mx-auto max-w-4xl w-full bg-background/80 backdrop-blur-sm z-10 mt-auto mb-0">
-            {showSignUpPrompt ? (
-              <SignUpPrompt onClose={() => setShowSignUpPrompt(false)} />
-            ) : (
-              <ChatInput
-                input={input}
-                handleInputChange={handleInputChange}
-                handleSubmit={customSubmitHandler}
-                isLoading={isLoading}
-                showGoogleSearch={showGoogleSearch}
-              />
-            )}
+            <ChatInput
+              input={input}
+              handleInputChange={handleInputChange}
+              handleSubmit={customSubmitHandler}
+              isLoading={isLoading}
+              showGoogleSearch={showGoogleSearch}
+            />
           </div>
         )}
       </div>

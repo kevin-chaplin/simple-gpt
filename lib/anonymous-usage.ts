@@ -18,6 +18,7 @@ export function hasExceededAnonymousLimit(): boolean {
   if (typeof window === 'undefined') return false
 
   const count = getAnonymousRequestCount()
+  console.log('Anonymous request count:', count, 'Limit:', ANONYMOUS_REQUEST_LIMIT, 'Exceeded:', count >= ANONYMOUS_REQUEST_LIMIT)
   return count >= ANONYMOUS_REQUEST_LIMIT
 }
 
@@ -50,7 +51,13 @@ export function incrementAnonymousRequestCount(): number {
   try {
     const currentCount = getAnonymousRequestCount()
     const newCount = currentCount + 1
+    console.log('Incrementing anonymous request count from', currentCount, 'to', newCount)
     localStorage.setItem('anonymousRequestCount', newCount.toString())
+
+    // Verify the count was actually updated
+    const verifyCount = getAnonymousRequestCount()
+    console.log('Verified anonymous request count after update:', verifyCount)
+
     return newCount
   } catch (error) {
     console.error('Error updating localStorage:', error)

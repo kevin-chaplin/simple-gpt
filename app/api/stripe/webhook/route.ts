@@ -94,6 +94,8 @@ export async function POST(req: Request) {
                 stripe_customer_id: customerId,
                 stripe_subscription_id: subscriptionId,
                 status: "active",
+                cancel_at_period_end: false,
+                current_period_end: null, // Will be updated when we get the subscription details
                 updated_at: new Date().toISOString(),
               })
               .eq("user_id", userId);
@@ -109,8 +111,30 @@ export async function POST(req: Request) {
             logDebug("API", "Subscription updated successfully");
 
             // Update subscription limits based on the plan
-            await updateSubscriptionLimits(userId, plan);
-            logDebug("API", `Updated usage limits for user ${userId} to ${plan} plan`);
+            try {
+              // Log the plan details for debugging
+              logDebug("API", `Updating usage limits for user ${userId} from checkout completion`);
+              logDebug("API", `Plan: ${plan}`);
+
+              await updateSubscriptionLimits(userId, plan);
+
+              // Verify the update was successful by checking the database
+              const { data: updatedSubscription, error: verifyError } = await supabase
+                .from("subscriptions")
+                .select("plan, daily_message_limit, history_days")
+                .eq("user_id", userId)
+                .single();
+
+              if (verifyError) {
+                logError("API", `Error verifying subscription update: ${verifyError.message}`);
+              } else {
+                logDebug("API", `Verified subscription update: ${JSON.stringify(updatedSubscription)}`);
+              }
+
+              logDebug("API", `Successfully updated usage limits for user ${userId} to ${plan} plan`);
+            } catch (error) {
+              logError("API", `Error updating subscription limits: ${error}`);
+            }
           } else {
             logDebug("API", `Creating new subscription for user ${userId}`);
 
@@ -123,6 +147,8 @@ export async function POST(req: Request) {
                   stripe_customer_id: customerId,
                   stripe_subscription_id: subscriptionId,
                   status: "active",
+                  cancel_at_period_end: false,
+                  current_period_end: null, // Will be updated when we get the subscription details
                   daily_message_limit: plan === 'premium' || plan === 'pro' ? -1 : PLAN_LIMITS.free.dailyMessageLimit,
                   history_days: plan === 'premium' ? -1 : (plan === 'pro' ? PLAN_LIMITS.pro.historyDays : PLAN_LIMITS.free.historyDays),
                 },
@@ -139,8 +165,30 @@ export async function POST(req: Request) {
             logDebug("API", "Subscription created successfully");
 
             // Update subscription limits based on the plan
-            await updateSubscriptionLimits(userId, plan);
-            logDebug("API", `Set usage limits for user ${userId} to ${plan} plan`);
+            try {
+              // Log the plan details for debugging
+              logDebug("API", `Updating usage limits for user ${userId} from new subscription`);
+              logDebug("API", `Plan: ${plan}`);
+
+              await updateSubscriptionLimits(userId, plan);
+
+              // Verify the update was successful by checking the database
+              const { data: updatedSubscription, error: verifyError } = await supabase
+                .from("subscriptions")
+                .select("plan, daily_message_limit, history_days")
+                .eq("user_id", userId)
+                .single();
+
+              if (verifyError) {
+                logError("API", `Error verifying subscription update: ${verifyError.message}`);
+              } else {
+                logDebug("API", `Verified subscription update: ${JSON.stringify(updatedSubscription)}`);
+              }
+
+              logDebug("API", `Successfully set usage limits for user ${userId} to ${plan} plan`);
+            } catch (error) {
+              logError("API", `Error updating subscription limits: ${error}`);
+            }
           }
         } catch (error) {
           logError("API", `Unexpected error in subscription processing: ${error}`);
@@ -215,6 +263,8 @@ export async function POST(req: Request) {
                 .update({
                   stripe_subscription_id: subscriptionId,
                   status: subscription.status,
+                  cancel_at_period_end: subscription.cancel_at_period_end || false,
+                  current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
                   updated_at: new Date().toISOString(),
                 })
                 .eq("id", customerSubscriptions[0].id);
@@ -232,8 +282,30 @@ export async function POST(req: Request) {
 
               // Update subscription limits based on the plan
               if (plan && subscription.status === 'active') {
-                await updateSubscriptionLimits(customerSubscriptions[0].user_id, plan);
-                logDebug("API", `Updated usage limits for user ${customerSubscriptions[0].user_id} to ${plan} plan`);
+                try {
+                  // Log the plan details for debugging
+                  logDebug("API", `Updating usage limits for user ${customerSubscriptions[0].user_id} from webhook`);
+                  logDebug("API", `Plan: ${plan}, Status: ${subscription.status}`);
+
+                  await updateSubscriptionLimits(customerSubscriptions[0].user_id, plan);
+
+                  // Verify the update was successful by checking the database
+                  const { data: updatedSubscription, error: verifyError } = await supabase
+                    .from("subscriptions")
+                    .select("plan, daily_message_limit, history_days")
+                    .eq("user_id", customerSubscriptions[0].user_id)
+                    .single();
+
+                  if (verifyError) {
+                    logError("API", `Error verifying subscription update: ${verifyError.message}`);
+                  } else {
+                    logDebug("API", `Verified subscription update: ${JSON.stringify(updatedSubscription)}`);
+                  }
+
+                  logDebug("API", `Successfully updated usage limits for user ${customerSubscriptions[0].user_id} to ${plan} plan`);
+                } catch (error) {
+                  logError("API", `Error updating subscription limits: ${error}`);
+                }
               }
 
               logDebug("API", `Updated subscription for customer ${subscription.customer}`);
@@ -248,6 +320,8 @@ export async function POST(req: Request) {
               .from("subscriptions")
               .update({
                 status: subscription.status,
+                cancel_at_period_end: subscription.cancel_at_period_end || false,
+                current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
                 updated_at: new Date().toISOString(),
               })
               .eq("stripe_subscription_id", subscriptionId);
@@ -265,8 +339,30 @@ export async function POST(req: Request) {
 
             // Update subscription limits based on the plan
             if (plan && subscription.status === 'active') {
-              await updateSubscriptionLimits(existingSubscription.user_id, plan);
-              logDebug("API", `Updated usage limits for user ${existingSubscription.user_id} to ${plan} plan`);
+              try {
+                // Log the plan details for debugging
+                logDebug("API", `Updating usage limits for user ${existingSubscription.user_id} from webhook`);
+                logDebug("API", `Plan: ${plan}, Status: ${subscription.status}`);
+
+                await updateSubscriptionLimits(existingSubscription.user_id, plan);
+
+                // Verify the update was successful by checking the database
+                const { data: updatedSubscription, error: verifyError } = await supabase
+                  .from("subscriptions")
+                  .select("plan, daily_message_limit, history_days")
+                  .eq("user_id", existingSubscription.user_id)
+                  .single();
+
+                if (verifyError) {
+                  logError("API", `Error verifying subscription update: ${verifyError.message}`);
+                } else {
+                  logDebug("API", `Verified subscription update: ${JSON.stringify(updatedSubscription)}`);
+                }
+
+                logDebug("API", `Successfully updated usage limits for user ${existingSubscription.user_id} to ${plan} plan`);
+              } catch (error) {
+                logError("API", `Error updating subscription limits: ${error}`);
+              }
             }
 
             logDebug("API", `Updated status for subscription ${subscriptionId} to ${subscription.status}`);

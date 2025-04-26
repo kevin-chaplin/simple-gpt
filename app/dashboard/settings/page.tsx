@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
+import { useSearchParams, useRouter } from "next/navigation"
+import Link from "next/link"
 
 const settingsFormSchema = z.object({
   theme: z.enum(["light", "dark", "system"]),
@@ -21,6 +23,26 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+
+  // Check for success parameter from Stripe checkout
+  useEffect(() => {
+    if (searchParams.get("success")) {
+      setShowSuccessMessage(true)
+      toast({
+        title: "Payment successful!",
+        description: "Thank you for subscribing. Your plan has been upgraded.",
+        duration: 5000,
+      })
+
+      // Remove the success parameter from the URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete("success")
+      window.history.replaceState({}, "", url.toString())
+    }
+  }, [searchParams, toast])
 
   // Avoid hydration mismatch
   useEffect(() => {
@@ -52,14 +74,14 @@ export default function SettingsPage() {
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       toast({
-        title: "Settings updated",
-        description: "Your settings have been saved successfully.",
+        title: "Account updated",
+        description: "Your account settings have been saved successfully.",
       })
     } catch (error) {
       console.error("Error saving settings:", error)
       toast({
         title: "Error",
-        description: "Failed to save settings. Please try again.",
+        description: "Failed to save account settings. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -74,8 +96,15 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage your account settings and preferences</p>
+        <h1 className="text-3xl font-bold">Account</h1>
+        <p className="text-muted-foreground mt-2">Manage your account settings and subscription</p>
+
+        {showSuccessMessage && (
+          <div className="mt-4 p-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-lg">
+            <p className="font-medium">Payment successful! Your subscription has been updated.</p>
+            <p className="mt-2">Thank you for your subscription. Your new plan is now active.</p>
+          </div>
+        )}
       </div>
       <div className="bg-card border rounded-lg p-6">
         <Form {...form}>
