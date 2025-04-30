@@ -26,6 +26,7 @@ export function SubscriptionManagement() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
   const [managingSubscription, setManagingSubscription] = useState(false)
+  const [hasMessageLimit, setHasMessageLimit] = useState(true)
 
   // Fetch the user's subscription
   useEffect(() => {
@@ -59,6 +60,25 @@ export function SubscriptionManagement() {
       setLoading(false)
     }
   }, [isLoaded, isSignedIn, userId])
+
+  // Fetch usage data to check if user has a message limit
+  useEffect(() => {
+    const fetchUsageData = async () => {
+      if (!isLoaded || !isSignedIn) return;
+      
+      try {
+        const response = await fetch('/api/usage/current');
+        const data = await response.json();
+        setHasMessageLimit(data.hasMessageLimit);
+      } catch (error) {
+        console.error('Failed to fetch usage data:', error);
+      }
+    };
+    
+    if (isLoaded && isSignedIn) {
+      fetchUsageData();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const handleManageSubscription = async () => {
     try {
@@ -158,13 +178,15 @@ export function SubscriptionManagement() {
             </div>
           )}
 
-          {/* Show usage limits */}
-          <div>
-            <h4 className="font-medium">Usage</h4>
-            <div className="mt-2">
-              <UsageLimitAlert />
+          {/* Show usage limits only if the user has a message limit */}
+          {hasMessageLimit && (
+            <div>
+              <h4 className="font-medium">Usage</h4>
+              <div className="mt-2">
+                <UsageLimitAlert />
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <h4 className="font-medium">Features</h4>

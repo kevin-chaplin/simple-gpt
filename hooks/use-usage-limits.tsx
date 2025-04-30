@@ -14,6 +14,7 @@ export interface UsageLimits {
   messageCount: number
   messageLimit: number
   timeUntilReset: string
+  hasMessageLimit: boolean
   checkUsage: () => Promise<void>
   incrementUsage: () => Promise<void>
 }
@@ -25,13 +26,14 @@ export function useUsageLimits(): UsageLimits {
   const [messageCount, setMessageCount] = useState(0)
   const [messageLimit, setMessageLimit] = useState(PLAN_LIMITS.free.dailyMessageLimit)
   const [timeUntilReset, setTimeUntilReset] = useState("")
+  const [hasMessageLimit, setHasMessageLimit] = useState(true)
   const { toast } = useToast()
 
   // Check if the user has reached their daily limit
   const checkUsage = useCallback(async () => {
     console.log("Checking usage limits, auth state:", { isLoaded, isSignedIn })
 
-    if (!isLoaded || !isSignedIn) {
+    if (!isLoaded) {
       setIsLoading(false)
       return
     }
@@ -41,10 +43,24 @@ export function useUsageLimits(): UsageLimits {
 
       console.log("Fetching current usage from API")
 
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
       // Fetch the user's current usage
-      const response = await fetch("/api/usage/current")
+      const response = await fetch("/api/usage/current", {
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
+        console.warn("API error:", response.status, response.statusText);
+        // Handle the error gracefully with default values
+        setMessageCount(0);
+        setMessageLimit(isSignedIn ? PLAN_LIMITS.free.dailyMessageLimit : 5);
+        setHasReachedLimit(false);
+        setTimeUntilReset("24 hours");
         throw new Error("Failed to fetch usage")
       }
 
@@ -55,26 +71,40 @@ export function useUsageLimits(): UsageLimits {
       setMessageLimit(data.messageLimit)
       setHasReachedLimit(data.hasReachedLimit)
       setTimeUntilReset(data.timeUntilReset)
+      setHasMessageLimit(data.hasMessageLimit)
 
       console.log("Updated usage state:", {
         messageCount: data.messageCount,
         messageLimit: data.messageLimit,
         hasReachedLimit: data.hasReachedLimit,
-        timeUntilReset: data.timeUntilReset
+        timeUntilReset: data.timeUntilReset,
+        hasMessageLimit: data.hasMessageLimit
       })
 
       return data
     } catch (error) {
       console.error("Error checking usage:", error)
-      toast({
-        title: "Error",
-        description: "Failed to check usage limits",
-        variant: "destructive",
-      })
+      // Don't show toast for AbortError (timeout)
+      if (error.name !== 'AbortError') {
+        toast({
+          title: "Error",
+          description: "Failed to check usage limits. Using default limits.",
+          variant: "destructive",
+        })
+      }
+      
+      // Set sensible defaults even when there's an error
+      if (messageCount === 0 && messageLimit === PLAN_LIMITS.free.dailyMessageLimit) {
+        setMessageCount(0);
+        setMessageLimit(isSignedIn ? PLAN_LIMITS.free.dailyMessageLimit : 5);
+        setHasReachedLimit(false);
+        setTimeUntilReset("24 hours");
+        setHasMessageLimit(true);
+      }
     } finally {
       setIsLoading(false)
     }
-  }, [isLoaded, isSignedIn, toast])
+  }, [isLoaded, isSignedIn, toast, messageCount, messageLimit])
 
   // Increment the user's message count
   const incrementUsage = useCallback(async () => {
@@ -91,7 +121,7 @@ export function useUsageLimits(): UsageLimits {
       setMessageCount(currentCount + 1)
 
       // Check if the user has reached their limit
-      if (currentCount + 1 >= currentLimit) {
+      if (hasMessageLimit && currentCount + 1 >= currentLimit) {
         setHasReachedLimit(true)
       }
 
@@ -109,13 +139,16 @@ export function useUsageLimits(): UsageLimits {
       // Update with the server's response
       setMessageCount(data.messageCount)
       setHasReachedLimit(data.hasReachedLimit)
+      if (data.hasMessageLimit !== undefined) {
+        setHasMessageLimit(data.hasMessageLimit)
+      }
     } catch (error) {
       console.error("Error incrementing usage:", error)
       // Revert the local increment if the server update fails
       setMessageCount((prev) => Math.max(0, prev - 1))
       setHasReachedLimit(false)
     }
-  }, [isLoaded, isSignedIn])
+  }, [isLoaded, isSignedIn, hasMessageLimit, messageCount, messageLimit])
 
   // Check usage when the component mounts
   useEffect(() => {
@@ -132,6 +165,7 @@ export function useUsageLimits(): UsageLimits {
     messageCount,
     messageLimit,
     timeUntilReset,
+    hasMessageLimit,
     checkUsage,
     incrementUsage,
   }

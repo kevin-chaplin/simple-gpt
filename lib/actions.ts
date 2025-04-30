@@ -1,7 +1,7 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
-import { createServerSupabaseClient } from "@/lib/supabase"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
 
 export async function createConversation() {

@@ -1,51 +1,113 @@
 import { NextResponse } from "next/server"
 import { auth } from "@clerk/nextjs/server"
-import {
-  getUserSubscription,
-  incrementUserMessageCount,
-  getTimeUntilReset
-} from "@/lib/usage-limits"
-import { formatTimeUntilReset } from "@/lib/usage-utils"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { PLAN_LIMITS } from "@/lib/usage-utils"
 import { logDebug, logError } from "@/lib/debug"
+
+// Function to get a user's subscription
+async function getUserSubscription(userId: string) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data || { plan: "free", status: "active" };
+  } catch (error) {
+    logError("Usage", `Error in getUserSubscription: ${error}`);
+    // Return a default subscription if there's an error
+    return { plan: "free", status: "active" };
+  }
+}
+
+// Function to increment a user's daily usage
+async function incrementUserDailyUsage(userId: string) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // First check if there's already a record for today
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from("user_usage")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", today)
+      .maybeSingle();
+      
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows found"
+      throw fetchError;
+    }
+    
+    if (existingRecord) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from("user_usage")
+        .update({ message_count: existingRecord.message_count + 1 })
+        .eq("id", existingRecord.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data.message_count;
+    } else {
+      // Create new record
+      const { data, error } = await supabase
+        .from("user_usage")
+        .insert([
+          { user_id: userId, date: today, message_count: 1 }
+        ])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data.message_count;
+    }
+  } catch (error) {
+    logError("Usage", `Error incrementing usage: ${error}`);
+    throw error;
+  }
+}
 
 export async function POST() {
   try {
-    // Check if the user is authenticated
-    const { userId } = await auth()
-
+    const { userId } = await auth();
+    
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
-
-    // Get the user's subscription
-    const subscription = await getUserSubscription()
-
-    if (!subscription) {
-      return NextResponse.json({ error: "Failed to fetch subscription" }, { status: 500 })
-    }
-
-    // Increment the user's message count
-    const newCount = await incrementUserMessageCount()
-
-    // Calculate time until reset
-    const timeUntilResetMs = await getTimeUntilReset()
-    const timeUntilReset = formatTimeUntilReset(timeUntilResetMs)
-
-    // Check if the user has reached their limit
-    const messageLimit = subscription.daily_message_limit < 0 ? Infinity : subscription.daily_message_limit
-    const hasReachedLimit = newCount >= messageLimit
-
+    
+    // Get user's subscription to determine limit
+    const subscription = await getUserSubscription(userId);
+    const plan = subscription?.plan || "free";
+    const messageLimit = PLAN_LIMITS[plan]?.dailyMessageLimit || PLAN_LIMITS.free.dailyMessageLimit;
+    
+    // Increment usage
+    const messageCount = await incrementUserDailyUsage(userId);
+    
+    // Check if they've reached their limit
+    const hasReachedLimit = messageCount >= messageLimit;
+    
     return NextResponse.json({
-      messageCount: newCount,
-      messageLimit: messageLimit === Infinity ? -1 : messageLimit,
+      messageCount,
+      messageLimit,
       hasReachedLimit,
-      timeUntilReset
-    })
+      plan
+    });
   } catch (error) {
-    logError("API", `Error in usage increment API: ${error}`)
+    logError("API", `Error incrementing usage: ${error.message}`);
     return NextResponse.json(
       { error: "Failed to increment usage" },
       { status: 500 }
-    )
+    );
   }
 }

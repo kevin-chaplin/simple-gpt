@@ -10,6 +10,7 @@ import { useUser } from "@clerk/nextjs"
 import { ArrowLeft } from "lucide-react"
 import { useTheme } from "next-themes"
 import { SubscriptionManagement } from "@/components/subscription-management"
+import { Progress } from "@/components/ui/progress"
 
 export default function AccountPage() {
   const { toast } = useToast()
@@ -20,6 +21,13 @@ export default function AccountPage() {
   const [mounted, setMounted] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [usage, setUsage] = useState({
+    hasMessageLimit: true,
+    messageCount: 0,
+    messageLimit: 100,
+    timeUntilReset: "24 hours",
+    hasReachedLimit: false,
+  })
 
   // Avoid hydration mismatch
   useEffect(() => {
@@ -35,6 +43,30 @@ export default function AccountPage() {
       })
     }
   }, [searchParams, toast])
+
+  // Fetch usage data
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const response = await fetch('/api/usage/current');
+        const data = await response.json();
+        console.log("Account page usage data:", data);
+        setUsage({
+          hasMessageLimit: data.hasMessageLimit,
+          messageCount: data.messageCount,
+          messageLimit: data.messageLimit,
+          timeUntilReset: data.timeUntilReset,
+          hasReachedLimit: data.hasReachedLimit,
+        });
+      } catch (error) {
+        console.error('Failed to fetch usage data:', error);
+      }
+    };
+    
+    if (mounted) {
+      fetchUsage();
+    }
+  }, [mounted]);
 
   const handleSaveSettings = () => {
     setIsSaving(true)
