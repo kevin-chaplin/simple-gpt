@@ -147,3 +147,30 @@
     animation-delay: 800ms;
   }
 }
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  /* Fix viewport issues on mobile */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Ensure proper scroll containers */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Adjust padding for mobile */
+  .pt-16 {
+    padding-top: 4rem !important;
+  }
+  
+  /* Ensure floating controls are visible */
+  .fixed.top-4 {
+    background-color: var(--background);
+    padding: 4px 8px;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}

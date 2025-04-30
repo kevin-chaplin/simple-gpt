@@ -98,9 +98,11 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
   useEffect(() => {
     if (isUserLoaded) {
       console.log("User loaded, setting isAuthenticated to:", !!isSignedIn)
-      setIsAuthenticated(!!isSignedIn)
+      
+      // Remove the debug element creation code
+      setIsAuthenticated(!!isSignedIn);
     }
-  }, [isUserLoaded, isSignedIn])
+  }, [isUserLoaded, isSignedIn, interfaceState, currentConversationId])
 
   console.log("Setting up useChat with currentConversationId:", currentConversationId)
   const { messages, input, handleInputChange, isLoading, error, setMessages, append } = useChat({
@@ -784,18 +786,36 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 
   return (
     <div className="flex h-screen overflow-hidden flex-col md:flex-row">
-      {/* Chat history sidebar - only show for authenticated users */}
+      {/* Chat history sidebar - modified for better mobile handling */}
       {isAuthenticated && (
-        <div className={`border-r ${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden h-screen pt-16`}>
+        <div className={`fixed md:relative z-40 md:z-auto border-r bg-background
+                        ${sidebarOpen ? 'w-full md:w-80 opacity-100' : 'w-0 opacity-0'} 
+                        transition-all duration-300 overflow-hidden h-screen pt-16`}>
           {sidebarOpen && (
             <div className="flex flex-col h-full">
+              {/* Add semi-transparent overlay on mobile only to indicate sidebar is modal */}
+              <div className="md:hidden fixed inset-0 bg-black/20 z-10" 
+                   onClick={() => setSidebarOpen(false)}></div>
+              
               {/* Chat sidebar with conversations */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto relative z-20 bg-background">
                 <ChatSidebar
                   conversations={conversations}
                   currentConversationId={currentConversationId}
-                  onSelectConversation={handleSelectConversation}
-                  onNewConversation={createNewConversation}
+                  onSelectConversation={(id) => {
+                    handleSelectConversation(id);
+                    // Auto-close sidebar on mobile after selection
+                    if (window.innerWidth < 768) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  onNewConversation={() => {
+                    createNewConversation();
+                    // Auto-close sidebar on mobile after creating new conversation
+                    if (window.innerWidth < 768) {
+                      setSidebarOpen(false);
+                    }
+                  }}
                   onDeleteConversation={handleDeleteConversation}
                   onRenameConversation={handleRenameConversation}
                   isLoading={isHistoryLoading}
@@ -808,7 +828,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 
       {/* Usage limit toast component removed in favor of permanent messages */}
 
-      {/* Main chat area */}
+      {/* Main chat area - modified to ensure content is visible regardless of sidebar state */}
       <div className="flex-1 relative flex flex-col h-screen">
         {/* Floating controls in top-right corner */}
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2" style={{ border: 'none', boxShadow: 'none' }}>
@@ -870,9 +890,15 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
         )}
 
         {/* Main content area */}
-        <div className="flex-1 overflow-y-auto pt-16 w-full">
+        <div className="flex-1 overflow-y-auto pt-16 w-full md:h-auto h-[calc(100vh-4rem)]">
           {showGoogleSearch ? (
-            <div className="flex items-center justify-center min-h-[calc(100vh-160px)] w-full">
+            <div className="flex flex-col justify-start items-center w-full px-4 pb-8 md:pb-16" 
+                 style={{ 
+                   paddingTop: 'min(10vh, 40px)', /* Reduced for small screens */
+                   minHeight: '75vh',
+                   position: 'relative',
+                   zIndex: 5
+                 }}>
               <GoogleSearch onSearch={handleSearch} error={searchError || null} />
             </div>
           ) : (
@@ -909,10 +935,3 @@ export const ChatInterface = forwardRef<ChatInterfaceRef>((_, ref) => {
 })
 
 ChatInterface.displayName = "ChatInterface"
-
-// Add a global type for the timestamp tracking
-declare global {
-  interface Window {
-    _lastUserMessageTimestamp?: number;
-  }
-}
