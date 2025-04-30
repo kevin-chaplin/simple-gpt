@@ -1,15 +1,35 @@
-import { auth } from "@clerk/nextjs/server"
 import { createClient } from "@supabase/supabase-js"
 import { logDebug, logError } from "@/lib/debug"
+
+// Use a separate import for server-side auth, which won't be included in client bundles
+let authImport: any = null;
+if (typeof window === 'undefined') {
+  // This import will only happen on the server
+  import('@clerk/nextjs/server').then(({ auth }) => {
+    authImport = { auth };
+  });
+}
 
 /**
  * Creates a Supabase client for server-side usage with Clerk authentication
  * Uses JWT token from Clerk to authenticate with Supabase
  */
 export const createServerSupabaseClient = async () => {
+  // This function should only be called on the server
+  if (typeof window !== 'undefined') {
+    throw new Error("createServerSupabaseClient should only be called on the server");
+  }
+
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const { getToken } = await auth();
+  
+  // Get auth from server-side import
+  if (!authImport) {
+    // Wait for import to complete (should be quick as it's happening at module initialization)
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  const { getToken } = await authImport.auth();
   const token = await getToken({ template: "supabase" });
 
   if (!supabaseUrl || !supabaseKey) {
@@ -42,7 +62,16 @@ let serverSupabaseToken: string | null = null
  * Reuses the client if the token hasn't changed
  */
 export const createCachedServerSupabaseClient = async () => {
-  const { getToken } = await auth();
+  if (typeof window !== 'undefined') {
+    throw new Error("createCachedServerSupabaseClient should only be called on the server");
+  }
+  
+  if (!authImport) {
+    // Wait for import to complete
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  
+  const { getToken } = await authImport.auth();
   const token = await getToken({ template: "supabase" });
 
   // If token changed or no client exists, create a new one
@@ -79,6 +108,10 @@ export const createCachedServerSupabaseClient = async () => {
  * This should only be used in trusted server contexts like webhooks
  */
 export const createServiceRoleSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    throw new Error("createServiceRoleSupabaseClient should only be called on the server");
+  }
+  
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

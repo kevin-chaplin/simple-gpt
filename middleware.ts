@@ -1,15 +1,29 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-// This middleware protects routes that require authentication
-export default clerkMiddleware()
+// Create route matcher for protected routes
+const isProtected = createRouteMatcher([
+  // Protected routes that require authentication
+  '/api/(.*)',
+  '/trpc/(.*)',
+  '/dashboard(.*)',
+  // Changed to match any account route pattern without conflicting
+  '/account(.*)',
+  // Profile routes - ensure we specify the parent route only
+  '/profile',
+]);
+
+export default clerkMiddleware({
+  // Only run authentication on protected routes
+  publicRoutes: (req) => !isProtected(req),
+});
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
-    // Make sure account route with catch-all pattern works
-    '/account(.*)',
+    // Static files and Next.js internals are excluded
+    '/((?!_next|api|trpc).*)',
+    '/api/(.*)',
+    '/trpc/(.*)',
+    // Add profile to the matcher but not the catch-all routes
+    '/profile',
   ],
 };

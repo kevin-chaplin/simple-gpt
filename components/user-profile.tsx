@@ -7,13 +7,30 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { User, LogOut, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import React from "react"
+import { UserAvatar } from "@/components/user-avatar"
+
+const UserDetails = () => {
+  const { user } = useUser()
+  
+  if (!user) return null
+  
+  return (
+    <div className="flex flex-col space-y-1 p-2">
+      <p className="text-sm font-medium">{user.fullName || user.username}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+        {user.primaryEmailAddress?.emailAddress}
+      </p>
+    </div>
+  )
+}
 
 export function UserProfile() {
   const { user, isLoaded } = useUser()
@@ -58,27 +75,17 @@ export function UserProfile() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full border-0">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.imageUrl} alt={user.username || "User"} />
-            <AvatarFallback>{getInitials()}</AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.fullName || user.username}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.primaryEmailAddress?.emailAddress}</p>
-          </div>
-        </DropdownMenuLabel>
+        <UserDetails />
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/account")}>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
+        <DropdownMenuItem asChild>
+          <Link href="/profile">Profile</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Account</span>
+        <DropdownMenuItem asChild>
+          <Link href="/account">Account</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
