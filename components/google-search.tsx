@@ -53,7 +53,7 @@ export function GoogleSearch({ onSearch, isLoading, error }: GoogleSearchProps) 
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto">
+    <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto min-h-[80vh] h-full">
       {/* Logo and title */}
       <div className="flex items-center justify-center mb-6">
         <Bot className="h-8 w-8 sm:h-10 sm:w-10 text-primary mr-2" />
