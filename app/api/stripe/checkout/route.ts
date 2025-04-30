@@ -16,13 +16,13 @@ const PLANS = {
     name: "Pro",
     price: 9.99,
     features: ["Unlimited AI Conversations", "Basic support", "30 day conversation history"],
-    stripePriceId: "price_1RHFhvPNIg5S3ZOUii6iqdZ8", // You'll need to replace this with your actual Stripe price ID
+    stripePriceId: "price_1RJU4CA2QuISYnSWiFH9701t", // You'll need to replace this with your actual Stripe price ID
   },
   premium: {
     name: "Premium",
     price: 19.99,
     features: ["Everything in Pro", "Unlimited conversation history", "Premium support"],
-    stripePriceId: "price_1RHFiGPNIg5S3ZOU32QmIZ3p", // You'll need to replace this with your actual Stripe price ID
+    stripePriceId: "price_1RJU4IA2QuISYnSWUKCANAhC", // You'll need to replace this with your actual Stripe price ID
   },
 };
 
