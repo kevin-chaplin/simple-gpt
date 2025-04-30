@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ClerkProvider } from "@clerk/nextjs"
 import SupabaseProvider from "@/lib/supabase-provider"
 import { LoadingProvider } from "@/components/loading-provider"
+import { Favicon } from "@/components/favicon"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -23,6 +24,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <Favicon />
+        </head>
         <body className={inter.className}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <SupabaseProvider>
