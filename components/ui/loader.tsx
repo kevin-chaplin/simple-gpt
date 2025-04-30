@@ -57,8 +57,8 @@ export function Loader() {
           <Brain className="h-12 w-12 text-primary" />
         </div>
 
-        {/* Text logo with fade-in animation */}
-        <div className="z-10 mt-32 animate-fade-in text-2xl font-bold text-primary">
+        {/* Text logo with fade-in animation - increased margin-top to prevent overlap */}
+        <div className="z-10 mt-40 animate-fade-in text-2xl font-bold text-primary">
           Sensible GPT
         </div>
       </div>
