@@ -27,13 +27,21 @@ export const createClientSupabaseClient = (token?: string) => {
 // For backward compatibility - this will be deprecated
 // This ensures existing code doesn't break, but should only be used in client components
 export const createServerSupabaseClient = async () => {
+  // Check if we're on server or client
   if (typeof window === 'undefined') {
-    logError("Supabase", "Using createServerSupabaseClient from client library - please update to import from supabase-server");
-    // Dynamic import to avoid bundling server code with client
-    const { createServerSupabaseClient: serverClient } = await import('./supabase-server');
-    return serverClient();
+    // Server-side - dynamically import server version to avoid bundling issues
+    try {
+      // Use dynamic import with .then to avoid bundling issues
+      return import('./supabase-server').then(({ createServerSupabaseClient: serverClient }) => {
+        return serverClient();
+      });
+    } catch (error) {
+      logError("Supabase", `Error importing server client: ${error.message}`);
+      // Fallback to regular client with no auth if server import fails
+      return createClientSupabaseClient();
+    }
   }
   
-  // Return client-side version for client components
+  // Client-side - return client-side version
   return createClientSupabaseClient();
 };

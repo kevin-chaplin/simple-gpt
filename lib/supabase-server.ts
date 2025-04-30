@@ -1,7 +1,12 @@
-import 'server-only';
+// This file contains server-only code - do not import in client components
 import { createClient } from "@supabase/supabase-js";
 import { auth } from "@clerk/nextjs/server";
 import { logDebug, logError } from "@/lib/debug";
+
+// Runtime check to prevent client-side usage
+if (typeof window !== 'undefined') {
+  throw new Error('This module can only be used on the server');
+}
 
 /**
  * Creates a Supabase client for server-side usage with Clerk authentication
