@@ -57,7 +57,7 @@ export function GoogleSearch({ onSearch, isLoading, error }: GoogleSearchProps) 
       {/* Logo and title */}
       <div className="flex items-center justify-center mb-6">
         <Bot className="h-8 w-8 sm:h-10 sm:w-10 text-primary mr-2" />
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">SimpleGPT</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">Sensible GPT</h1>
       </div>
 
       {/* Tagline */}

@@ -44,7 +44,7 @@ export function ChatHistory({ messages, isLoading, error }: ChatHistoryProps) {
       <div className="max-w-4xl mx-auto px-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center min-h-[50vh]">
-            <p className="text-center text-muted-foreground">Start a conversation with Simple GPT.</p>
+            <p className="text-center text-muted-foreground">Start a conversation with Sensible GPT.</p>
           </div>
         ) : (
           <div className="space-y-6 w-full">
