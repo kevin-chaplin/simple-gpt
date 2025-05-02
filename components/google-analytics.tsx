@@ -2,7 +2,7 @@
 
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 
 // Add type declaration for gtag
 declare global {
@@ -19,7 +19,8 @@ declare global {
 // Replace with your Google Analytics measurement ID
 const GA_MEASUREMENT_ID = 'G-0S17RQBNFJ'
 
-export default function GoogleAnalytics() {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function AnalyticsPageView() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -32,6 +33,10 @@ export default function GoogleAnalytics() {
     }
   }, [pathname, searchParams])
 
+  return null
+}
+
+export default function GoogleAnalytics() {
   return (
     <>
       {/* Google Analytics script */}
@@ -53,6 +58,9 @@ export default function GoogleAnalytics() {
           `,
         }}
       />
+      <Suspense fallback={null}>
+        <AnalyticsPageView />
+      </Suspense>
     </>
   )
 }
