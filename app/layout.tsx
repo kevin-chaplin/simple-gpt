@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs"
 import SupabaseProvider from "@/lib/supabase-provider"
 import { LoadingProvider } from "@/components/loading-provider"
 import { Favicon } from "@/components/favicon"
+import GoogleAnalytics from "@/components/google-analytics"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -26,6 +27,7 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <head>
           <Favicon />
+          <GoogleAnalytics />
         </head>
         <body className={inter.className}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
